@@ -14,8 +14,6 @@
 		<script src="js/objects/Water.js"></script>
 
 		<script src="js/Detector.js"></script>
-		<script src="js/libs/stats.min.js"></script>
-		<script src="js/libs/dat.gui.min.js"></script>
 
 		<script>
 
@@ -23,7 +21,7 @@
 
 			var container, stats;
 			var camera, scene, renderer, light;
-			var controls, water, sphere, cubeMap;
+			var controls, water, cubeMap;
 
 			var parameters = {
 				oceanSide: 2000,
@@ -50,7 +48,7 @@
 				//
 
 				scene = new THREE.Scene();
-				scene.fog = new THREE.FogExp2( 0xaabbbb, 0.001 );
+				scene.fog = new THREE.FogExp2( 0xaabbbb, 0.0001 );
 
 				//
 
@@ -72,15 +70,8 @@
 				var ambientLight = new THREE.AmbientLight( 0xcccccc, 0.4 );
 				scene.add( ambientLight );
 
-				//
-
 				setWater();
-
-				//
-
-				setSkybox();
-
-				//
+        setSkybox();
 
 				var geometry = new THREE.IcosahedronGeometry( 20, 2 );
 
@@ -90,39 +81,14 @@
 
 				}
 
-				var material = new THREE.MeshPhongMaterial( {
-					vertexColors: THREE.FaceColors,
-					shininess: 10,
-					envMap: cubeMap,
-					side: THREE.DoubleSide
-				} );
-
-				sphere = new THREE.Mesh( geometry, material );
-				sphere.castShadow = true;
-				scene.add( sphere );
-
-				//
-
 				controls = new THREE.OrbitControls( camera, renderer.domElement );
 				controls.maxPolarAngle = Math.PI * 0.495;
+        controls.minPolarAngle = Math.PI * 0.5;
 				controls.target.set( 0, 10, 0 );
 				controls.enablePan = false;
 				controls.minDistance = 40.0;
 				controls.maxDistance = 200.0;
 				camera.lookAt( controls.target );
-
-				//
-
-				stats = new Stats();
-				container.appendChild( stats.dom );
-
-				//
-
-				gui = new dat.GUI();
-
-				gui.add( parameters, 'distortionScale', 0, 8, 0.1 );
-				gui.add( parameters, 'size', 0.1, 10, 0.1 );
-				gui.add( parameters, 'alpha', 0.9, 1, .001 );
 
 				//
 
@@ -144,7 +110,7 @@
 						}),
 						alpha: parameters.alpha,
 						sunDirection: light.position.clone().normalize(),
-						sunColor: 0xffffff,
+						sunColor: 0xf5f5f5,
 						waterColor: 0x001e0f,
 						distortionScale: parameters.distortionScale,
 						fog: scene.fog !== undefined
@@ -158,10 +124,38 @@
 
 			}
 
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+
+			}
+
+			function render() {
+        var time = performance.now() * 0.001;
+
+				water.material.uniforms.time.value += 1.0 / 60.0;
+				water.material.uniforms.size.value = parameters.size;
+				water.material.uniforms.distortionScale.value = parameters.distortionScale;
+				water.material.uniforms.alpha.value = parameters.alpha;
+
+				renderer.render( scene, camera );
+			}
+
+
 			function setSkybox() {
 
 				var cubeTextureLoader = new THREE.CubeTextureLoader();
-				cubeTextureLoader.setPath( 'textures/cube/skyboxsun25deg/' );
+				cubeTextureLoader.setPath( 'textures/skyboxsun25deg/' );
 
 				cubeMap = cubeTextureLoader.load( [
 					'px.jpg', 'nx.jpg',
@@ -187,43 +181,7 @@
 				var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
 
 				scene.add( skyBox );
-
 			}
-
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function animate() {
-
-				requestAnimationFrame( animate );
-				render();
-				stats.update();
-
-			}
-
-			function render() {
-
-				var time = performance.now() * 0.001;
-
-				sphere.position.y = Math.sin( time ) * 20 + 5;
-				sphere.rotation.x = time * 0.5;
-				sphere.rotation.z = time * 0.51;
-
-				water.material.uniforms.time.value += 1.0 / 60.0;
-				water.material.uniforms.size.value = parameters.size;
-				water.material.uniforms.distortionScale.value = parameters.distortionScale;
-				water.material.uniforms.alpha.value = parameters.alpha;
-
-				renderer.render( scene, camera );
-
-			}
-
 		</script>
 	</body>
 </html>
