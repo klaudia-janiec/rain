@@ -16,12 +16,10 @@
 		<script src="js/Detector.js"></script>
 
 		<script>
-
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
 			var container, stats;
 			var camera, scene, renderer, light;
-			var controls, water, cubeMap;
+			var controls, water, cubeMap, particleSystem;
 
 			var parameters = {
 				oceanSide: 2000,
@@ -94,6 +92,56 @@
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
+        var size = 3;
+        var transparent = true;
+        var opacity = 0.6;
+        var color = 0xffffff;
+        var sizeAttenuation = true;
+
+				var texture1 = THREE.ImageUtils.loadTexture("textures/raindrop-1.png");
+				var texture2 = THREE.ImageUtils.loadTexture("textures/raindrop-2.png");
+				var geom1 = new THREE.Geometry();
+				var geom2 = new THREE.Geometry();
+				var material1 = new THREE.PointsMaterial({
+						size: size,
+						transparent: transparent,
+						opacity: opacity,
+						map: texture1,
+						blending: THREE.AdditiveBlending,
+						sizeAttenuation: sizeAttenuation,
+						color: color});
+				var material2 = new THREE.PointsMaterial({
+						size: size,
+						transparent: transparent,
+						opacity: opacity,
+						map: texture2,
+						blending: THREE.AdditiveBlending,
+						sizeAttenuation: sizeAttenuation,
+						color: color});
+					var range = 1000;
+					//            for (var i = 0 ; i < 10000 ; i++) {
+					//                var particle = new THREE.Vector3(Math.random()*range-range/2,Math.random()*range-range/2,Math.random()*range-range/2);
+					//                geom1.vertices.push(particle);
+					//            }
+					// y is from 0 to 60
+					// x is from -20 to 20
+					for (var i = 0; i < 1500; i++) {
+							var particle = new THREE.Vector3(
+											Math.random() * range - range / 2,
+											Math.random() * range * 1.5,
+											Math.random() * range - range / 2);
+							particle.velocityY = 0.1 + Math.random() / 5;
+							particle.velocityX = (Math.random() - 0.5) / 3;
+							geom2.vertices.push(particle);
+					}
+					//            system1 = new THREE.ParticleSystem(geom1,material1);
+					particleSystem = new THREE.Points(geom2, material2);
+					//            system1.sortParticles = true;
+					//            system1.name = "particles1";
+					particleSystem.sortParticles = true;
+					particleSystem.name = "particleSystem";
+					//            scene.add(system1);
+					scene.add(particleSystem);
 			}
 
 			function setWater() {
@@ -141,12 +189,18 @@
 			}
 
 			function render() {
-        var time = performance.now() * 0.001;
-
 				water.material.uniforms.time.value += 1.0 / 60.0;
 				water.material.uniforms.size.value = parameters.size;
 				water.material.uniforms.distortionScale.value = parameters.distortionScale;
 				water.material.uniforms.alpha.value = parameters.alpha;
+
+        var vertices = particleSystem.geometry.vertices;
+        vertices.forEach(function (v) {
+            v.y = v.y - (v.velocityY);
+            v.x = v.x - (v.velocityX);
+            if (v.y <= 0) v.y = 60;
+            if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
+        });
 
 				renderer.render( scene, camera );
 			}
