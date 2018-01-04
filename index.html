@@ -71,14 +71,6 @@
 				setWater();
         setSkybox();
 
-				var geometry = new THREE.IcosahedronGeometry( 20, 2 );
-
-				for ( var i = 0, j = geometry.faces.length; i < j; i ++ ) {
-
-					geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
-
-				}
-
 				controls = new THREE.OrbitControls( camera, renderer.domElement );
 				controls.maxPolarAngle = Math.PI * 0.495;
         controls.minPolarAngle = Math.PI * 0.5;
@@ -94,14 +86,14 @@
 
         var size = 3;
         var transparent = true;
-        var opacity = 0.6;
-        var color = 0xffffff;
+        var opacity = 0.4;
+				var color = 0xffffff;
         var sizeAttenuation = true;
 
 				var texture1 = THREE.ImageUtils.loadTexture("textures/raindrop-1.png");
 				var texture2 = THREE.ImageUtils.loadTexture("textures/raindrop-2.png");
-				var geom1 = new THREE.Geometry();
 				var geom2 = new THREE.Geometry();
+
 				var material1 = new THREE.PointsMaterial({
 						size: size,
 						transparent: transparent,
@@ -118,29 +110,22 @@
 						blending: THREE.AdditiveBlending,
 						sizeAttenuation: sizeAttenuation,
 						color: color});
-					var range = 1000;
-					//            for (var i = 0 ; i < 10000 ; i++) {
-					//                var particle = new THREE.Vector3(Math.random()*range-range/2,Math.random()*range-range/2,Math.random()*range-range/2);
-					//                geom1.vertices.push(particle);
-					//            }
-					// y is from 0 to 60
-					// x is from -20 to 20
-					for (var i = 0; i < 1500; i++) {
+					var range = 5000;
+
+					for (var i = 0; i < 5500; i++) {
 							var particle = new THREE.Vector3(
 											Math.random() * range - range / 2,
 											Math.random() * range * 1.5,
 											Math.random() * range - range / 2);
-							particle.velocityY = 0.1 + Math.random() / 5;
+							particle.velocityY = 2 + Math.random();
 							particle.velocityX = (Math.random() - 0.5) / 3;
 							geom2.vertices.push(particle);
 					}
-					//            system1 = new THREE.ParticleSystem(geom1,material1);
+
 					particleSystem = new THREE.Points(geom2, material2);
-					//            system1.sortParticles = true;
-					//            system1.name = "particles1";
+
 					particleSystem.sortParticles = true;
 					particleSystem.name = "particleSystem";
-					//            scene.add(system1);
 					scene.add(particleSystem);
 			}
 
@@ -198,9 +183,10 @@
         vertices.forEach(function (v) {
             v.y = v.y - (v.velocityY);
             v.x = v.x - (v.velocityX);
-            if (v.y <= 0) v.y = 60;
-            if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
+            if (v.y < -5) v.y = 60;
+            if (v.x <= -50 || v.x >= 50) v.velocityX = v.velocityX * -1;
         });
+				particleSystem.geometry.verticesNeedUpdate = true;
 
 				renderer.render( scene, camera );
 			}
